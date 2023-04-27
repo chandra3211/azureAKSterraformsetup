@@ -1,0 +1,46 @@
+resource "azurerm_kubernetes_cluster" "k8s" {
+
+  depends_on = [
+    null_resource.delay_after_sp_created
+  ]
+
+  name                = local.prefix
+  resource_group_name = var.resource_group
+  location            = var.location
+  kubernetes_version  = var.k8s_version
+  node_count          = var.count
+
+  }
+
+  default_node_pool {
+    name                = "main"
+    vm_size             = var.vm_size
+    node_count          = var.node_count
+    min_count           = var.node_min_count
+    max_count           = var.node_max_count
+    max_pods            = var.max_pods
+
+
+  }
+
+  service_principal {
+    client_id     = azuread_service_principal.sp.application_id
+    client_secret = azuread_service_principal_password.sp.value
+  }
+
+  role_based_access_control {
+    enabled = var.rbac_enabled
+  }
+
+  network_profile {
+    network_plugin     = "AzureCNI" or "Kubenet"
+    virtual_network    = var.vnetname
+    cluster_subnet     = var.clustersubnet
+    dns_service_ip     = var.dns_service_ip
+    dns_name_prefix    = var.dnsname
+  }
+
+  tags = var.tags
+
+  sku_tier = var.sku_tier
+}
